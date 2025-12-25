@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mokykis Prancūzų Kalbos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c 0%, #0d1b3e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .category-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-btn {
+            padding: 10px 20px;
+            background: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .category-btn.active {
+            background: #ffd700;
+            font-weight: bold;
+        }
+
+        .card-container {
+            perspective: 1000px;
+            margin-bottom: 20px;
+        }
+
+        .flashcard {
+            width: 450px;
+            min-height: 320px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+            padding: 30px;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #f0f0f0;
+        }
+
+        .word {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .pronunciation {
+            font-size: 1.3em;
+            color: #888;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .translate-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+
+        .translate-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            background: #ff5252;
+        }
+
+        .hint {
+            font-size: 1em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .translation {
+            font-size: 2.5em;
+            color: #764ba2;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: 600;
+        }
+
+        .btn-prev {
+            background: #64b5f6;
+            color: white;
+        }
+
+        .btn-next {
+            background: #64b5f6;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .progress {
+            color: white;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 500px) {
+            .flashcard {
+                width: 90vw;
+                min-height: 280px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .word {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🇫🇷 Mokykis Prancūzų Kalbos</h1>
+        <p class="subtitle">Spausk kortelę pamatyti vertimą</p>
+    </header>
+
+    <div class="category-selector">
+        <button class="category-btn active" onclick="changeCategory('basics')">📖 Pagrindai</button>
+        <button class="category-btn" onclick="changeCategory('mathnumbers')">🔢 Matematika</button>
+        <button class="category-btn" onclick="changeCategory('weekdays')">📅 Dienos</button>
+        <button class="category-btn" onclick="changeCategory('food')">🍽️ Maistas</button>
+        <button class="category-btn" onclick="changeCategory('vehicles')">🚗 Transportas</button>
+        <button class="category-btn" onclick="changeCategory('sports')">⚽ Sportas</button>
+        <button class="category-btn" onclick="changeCategory('travel')">✈️ Kelionės</button>
+        <button class="category-btn" onclick="changeCategory('christmas')">🎄 Kalėdos</button>
+        <button class="category-btn" onclick="changeCategory('geography')">🌍 Geografija</button>
+        <button class="category-btn" onclick="changeCategory('history')">📜 Istorija</button>
+        <button class="category-btn" onclick="changeCategory('languages')">🗣️ Kalbos</button>
+    </div>
+
+    <div class="progress" id="progress">Kortelė 1 iš 30</div>
+
+    <div class="card-container">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+            <div class="card-front">
+                <div class="word" id="french-word">Bonjour</div>
+                <div class="pronunciation" id="pronunciation">[bon-zhoor]</div>
+                <div class="hint">Spausk kortelę pamatyti vertimą</div>
+            </div>
+            <div class="card-back">
+                <div class="translation" id="lithuanian-word">Labas</div>
+                <div class="hint">Pakartok garsiai 3 kartus!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-prev" onclick="previousCard()">← Atgal</button>
+        <button class="btn btn-next" onclick="nextCard()">Kitas →</button>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button class="btn" style="background: #ff6b6b; color: white;" onclick="openGoogleTranslate()">🌐 Google Translate</button>
+    </div>
+
+    <script>
+        const VOCAB = {
+            basics: [
+                { fr: 'Bonjour', lt: 'Labas / Laba diena', pr: '[bon-zhoor]' },
+                { fr: 'Bonsoir', lt: 'Labas vakaras', pr: '[bo~-swar]' },
+                { fr: 'Bonne nuit', lt: 'Labanakt', pr: '[bon nwee]' },
+                { fr: 'Salut', lt: 'Sveiki', pr: '[sa-lü]' },
+                { fr: 'Merci', lt: 'Ačiū', pr: '[mer-see]' },
+                { fr: 'Merci beaucoup', lt: 'Labai ačiū', pr: '[mer-see bo-koo]' },
+                { fr: 'De rien', lt: 'Nėra už ką', pr: '[duh rya~]' },
+                { fr: 'Au revoir', lt: 'Viso gero', pr: '[o ruh-vwar]' },
+                { fr: 'À bientôt', lt: 'Iki pasimatymo', pr: '[a bya~-to]' },
+                { fr: 'Oui', lt: 'Taip', pr: '[wee]' },
+                { fr: 'Non', lt: 'Ne', pr: '[no~]' },
+                { fr: 'S\'il vous plaît', lt: 'Prašau', pr: '[seel voo pleh]' },
+                { fr: 'Pardon', lt: 'Atsiprašau', pr: '[par-do~]' },
+                { fr: 'Comment allez-vous?', lt: 'Kaip laikotės?', pr: '[ko-mo~ ta-lay voo]' },
+                { fr: 'Ça va?', lt: 'Kaip sekasi?', pr: '[sa va]' },
+                { fr: 'Très bien', lt: 'Labai gerai', pr: '[treh bya~]' },
+                { fr: 'Je m\'appelle...', lt: 'Mano vardas...', pr: '[zhuh ma-pel]' },
+                { fr: 'Enchanté', lt: 'Malonu susipažinti', pr: '[o~-sho~-tay]' },
+                { fr: 'Je suis désolé', lt: 'Man labai gaila', pr: '[zhuh swee day-zo-lay]' },
+                { fr: 'Je ne comprends pas', lt: 'Aš nesuprantu', pr: '[zhuh nuh ko~-pro~ pa]' },
+                { fr: 'Parlez-vous anglais?', lt: 'Ar kalbate angliškai?', pr: '[par-lay voo o~-gleh]' },
+                { fr: 'D\'accord', lt: 'Gerai / Sutinku', pr: '[da-kor]' }
+            ],
+            weekdays: [
+                { fr: 'Lundi', lt: 'Pirmadienis', pr: '[la~-dee]' },
+                { fr: 'Mardi', lt: 'Antradienis', pr: '[mar-dee]' },
+                { fr: 'Mercredi', lt: 'Trečiadienis', pr: '[mer-kruh-dee]' },
+                { fr: 'Jeudi', lt: 'Ketvirtadienis', pr: '[zhuh-dee]' },
+                { fr: 'Vendredi', lt: 'Penktadienis', pr: '[vo~-druh-dee]' },
+                { fr: 'Samedi', lt: 'Šeštadienis', pr: '[sam-dee]' },
+                { fr: 'Dimanche', lt: 'Sekmadienis', pr: '[dee-mo~sh]' },
+                { fr: 'Aujourd\'hui', lt: 'Šiandien', pr: '[o-zhoor-dwee]' },
+                { fr: 'Demain', lt: 'Rytoj', pr: '[duh-ma~]' },
+                { fr: 'Hier', lt: 'Vakar', pr: '[yair]' },
+                { fr: 'La semaine', lt: 'Savaitė', pr: '[la suh-men]' },
+                { fr: 'Le week-end', lt: 'Savaitgalis', pr: '[luh week-end]' },
+                { fr: 'Le mois', lt: 'Mėnuo', pr: '[luh mwa]' },
+                { fr: 'L\'année', lt: 'Metai', pr: '[la-nay]' }
+            ],
+            food: [
+                { fr: 'Le pain', lt: 'Duona', pr: '[luh pa~]' },
+                { fr: 'La baguette', lt: 'Batonas', pr: '[la ba-get]' },
+                { fr: 'Le croissant', lt: 'Kruasanas', pr: '[luh krwa-so~]' },
+                { fr: 'L\'eau', lt: 'Vanduo', pr: '[lo]' },
+                { fr: 'Le lait', lt: 'Pienas', pr: '[luh leh]' },
+                { fr: 'Le café', lt: 'Kava', pr: '[luh ka-fay]' },
+                { fr: 'Le thé', lt: 'Arbata', pr: '[luh tay]' },
+                { fr: 'Le jus', lt: 'Sultys', pr: '[luh zhü]' },
+                { fr: 'Le vin', lt: 'Vynas', pr: '[luh va~]' },
+                { fr: 'La bière', lt: 'Alus', pr: '[la byair]' },
+                { fr: 'Le fromage', lt: 'Sūris', pr: '[luh fro-mazh]' },
+                { fr: 'Le beurre', lt: 'Sviestas', pr: '[luh buhr]' },
+                { fr: 'Les œufs', lt: 'Kiaušiniai', pr: '[lay zuh]' },
+                { fr: 'La viande', lt: 'Mėsa', pr: '[la vyo~d]' },
+                { fr: 'Le poulet', lt: 'Vištiena', pr: '[luh poo-leh]' },
+                { fr: 'Le poisson', lt: 'Žuvis', pr: '[luh pwa-so~]' },
+                { fr: 'Les fruits', lt: 'Vaisiai', pr: '[lay frwee]' },
+                { fr: 'Les légumes', lt: 'Daržovės', pr: '[lay lay-güm]' },
+                { fr: 'La pomme', lt: 'Obuolys', pr: '[la pom]' },
+                { fr: 'La banane', lt: 'Bananas', pr: '[la ba-nan]' },
+                { fr: 'L\'orange', lt: 'Apelsinas', pr: '[lo-ro~zh]' },
+                { fr: 'La tomate', lt: 'Pomidoras', pr: '[la to-mat]' },
+                { fr: 'La salade', lt: 'Salotos', pr: '[la sa-lad]' },
+                { fr: 'Le gâteau', lt: 'Tortas', pr: '[luh ga-to]' },
+                { fr: 'Le chocolat', lt: 'Šokoladas', pr: '[luh sho-ko-la]' },
+                { fr: 'La glace', lt: 'Ledai', pr: '[la glas]' },
+                { fr: 'Bon appétit!', lt: 'Skanaus!', pr: '[bo~ na-pay-tee]' },
+                { fr: 'J\'ai faim', lt: 'Aš alkanas', pr: '[zhay fa~]' },
+                { fr: 'J\'ai soif', lt: 'Aš ištroškęs', pr: '[zhay swaf]' }
+            ],
+            vehicles: [
+                { fr: 'La voiture', lt: 'Automobilis', pr: '[la vwa-tür]' },
+                { fr: 'Le camion', lt: 'Sunkvežimis', pr: '[luh ka-myo~]' },
+                { fr: 'Le vélo', lt: 'Dviratis', pr: '[luh vay-lo]' },
+                { fr: 'La moto', lt: 'Motociklas', pr: '[la mo-to]' },
+                { fr: 'Le scooter', lt: 'Skūteris', pr: '[luh skoo-ter]' },
+                { fr: 'L\'autobus', lt: 'Autobusas', pr: '[lo-to-büs]' },
+                { fr: 'Le métro', lt: 'Metro', pr: '[luh may-tro]' },
+                { fr: 'Le train', lt: 'Traukinys', pr: '[luh tra~]' },
+                { fr: 'L\'avion', lt: 'Lėktuvas', pr: '[la-vyo~]' },
+                { fr: 'Le bateau', lt: 'Laivas', pr: '[luh ba-to]' },
+                { fr: 'Le taxi', lt: 'Taksi', pr: '[luh tak-see]' },
+                { fr: 'La trottinette', lt: 'Paspirtukas', pr: '[la tro-tee-net]' },
+                { fr: 'Le skateboard', lt: 'Riedlentė', pr: '[luh skayt-bord]' },
+                { fr: 'L\'hélicoptère', lt: 'Sraigtasparnis', pr: '[lay-lee-kop-tair]' },
+                { fr: 'Le ferry', lt: 'Keltas', pr: '[luh feh-ree]' }
+            ],
+            christmas: [
+                { fr: 'Noël', lt: 'Kalėdos', pr: '[no-el]' },
+                { fr: 'Joyeux Noël!', lt: 'Linksmų Kalėdų!', pr: '[zhwa-yuh no-el]' },
+                { fr: 'Le sapin de Noël', lt: 'Kalėdų eglutė', pr: '[luh sa-pa~ duh no-el]' },
+                { fr: 'L\'arbre de Noël', lt: 'Kalėdų medis', pr: '[larbr duh no-el]' },
+                { fr: 'Les décorations', lt: 'Dekoracijos', pr: '[lay day-ko-ra-syo~]' },
+                { fr: 'La guirlande', lt: 'Girlianda', pr: '[la geer-lo~d]' },
+                { fr: 'Les lumières', lt: 'Lemputės', pr: '[lay lü-myair]' },
+                { fr: 'La boule de Noël', lt: 'Kalėdinis žaisliukas', pr: '[la bool duh no-el]' },
+                { fr: 'L\'étoile', lt: 'Žvaigždė', pr: '[lay-twal]' },
+                { fr: 'Le Père Noël', lt: 'Kalėdų senelis', pr: '[luh pair no-el]' },
+                { fr: 'Le cadeau', lt: 'Dovana', pr: '[luh ka-do]' },
+                { fr: 'Les cadeaux', lt: 'Dovanos', pr: '[lay ka-do]' },
+                { fr: 'Le papier cadeau', lt: 'Dovanų popierius', pr: '[luh pa-pyay ka-do]' },
+                { fr: 'Le ruban', lt: 'Kaspinas', pr: '[luh rü-bo~]' },
+                { fr: 'La neige', lt: 'Sniegas', pr: '[la nezh]' },
+                { fr: 'Le bonhomme de neige', lt: 'Sniego senis', pr: '[luh bo-nom duh nezh]' },
+                { fr: 'Le traîneau', lt: 'Rogės', pr: '[luh treh-no]' },
+                { fr: 'Le renne', lt: 'Šiaurės elnias', pr: '[luh ren]' },
+                { fr: 'La chaussette de Noël', lt: 'Kalėdinė kojinė', pr: '[la sho-set duh no-el]' },
+                { fr: 'La cheminée', lt: 'Kaminas', pr: '[la shuh-mee-nay]' },
+                { fr: 'La couronne', lt: 'Vainikas', pr: '[la koo-ron]' },
+                { fr: 'Le houx', lt: 'Būdra', pr: '[luh oo]' },
+                { fr: 'Le gui', lt: 'Amalas', pr: '[luh gee]' },
+                { fr: 'La bougie', lt: 'Žvakė', pr: '[la boo-zhee]' },
+                { fr: 'Le repas de Noël', lt: 'Kalėdinis vakaras', pr: '[luh ruh-pa duh no-el]' },
+                { fr: 'La dinde', lt: 'Kalakutiena', pr: '[la da~d]' },
+                { fr: 'La bûche de Noël', lt: 'Kalėdinis tortas', pr: '[la büsh duh no-el]' },
+                { fr: 'Les biscuits', lt: 'Sausainiai', pr: '[lay bee-skwee]' },
+                { fr: 'Le chocolat chaud', lt: 'Karštas šokoladas', pr: '[luh sho-ko-la sho]' },
+                { fr: 'Le vin chaud', lt: 'Karštas vynas', pr: '[luh va~ sho]' },
+                { fr: 'La crèche', lt: 'Prakartėlė', pr: '[la kresh]' },
+                { fr: 'L\'ange', lt: 'Angelas', pr: '[lo~zh]' },
+                { fr: 'La cloche', lt: 'Varpas', pr: '[la klosh]' },
+                { fr: 'Bonne année!', lt: 'Laimingų Naujųjų!', pr: '[bon a-nay]' },
+                { fr: 'Les fêtes', lt: 'Šventės', pr: '[lay fet]' },
+                { fr: 'La famille', lt: 'Šeima', pr: '[la fa-meey]' },
+                { fr: 'La joie', lt: 'Džiaugsmas', pr: '[la zhwa]' },
+                { fr: 'La magie de Noël', lt: 'Kalėdų magija', pr: '[la ma-zhee duh no-el]' }
+            ],
+            sports: [
+                { fr: 'Le sport', lt: 'Sportas', pr: '[luh spor]' },
+                { fr: 'Le football', lt: 'Futbolas', pr: '[luh foot-bol]' },
+                { fr: 'Le basketball', lt: 'Krepšinis', pr: '[luh bas-ket-bol]' },
+                { fr: 'Le tennis', lt: 'Tenisas', pr: '[luh teh-nees]' },
+                { fr: 'Le volleyball', lt: 'Tinklinis', pr: '[luh vo-lay-bol]' },
+                { fr: 'Le rugby', lt: 'Regbis', pr: '[luh rüg-bee]' },
+                { fr: 'Le hockey', lt: 'Hokėjas', pr: '[luh o-kay]' },
+                { fr: 'La natation', lt: 'Plaukimas', pr: '[la na-ta-syo~]' },
+                { fr: 'Le cyclisme', lt: 'Dviračių sportas', pr: '[luh see-kleezm]' },
+                { fr: 'L\'athlétisme', lt: 'Lengvoji atletika', pr: '[lat-lay-teezm]' },
+                { fr: 'La course', lt: 'Bėgimas', pr: '[la koors]' },
+                { fr: 'Le ski', lt: 'Slidinėjimas', pr: '[luh skee]' },
+                { fr: 'Le snowboard', lt: 'Snieglentė', pr: '[luh sno-bord]' },
+                { fr: 'Le golf', lt: 'Golfas', pr: '[luh golf]' },
+                { fr: 'La boxe', lt: 'Boksas', pr: '[la boks]' },
+                { fr: 'Les arts martiaux', lt: 'Kovos menai', pr: '[lay zar mar-syo]' },
+                { fr: 'Le judo', lt: 'Dziudo', pr: '[luh zhü-do]' },
+                { fr: 'Le karaté', lt: 'Karatė', pr: '[luh ka-ra-tay]' },
+                { fr: 'L\'escalade', lt: 'Laipiojimas', pr: '[les-ka-lad]' },
+                { fr: 'Le surf', lt: 'Banglentė', pr: '[luh sürf]' },
+                { fr: 'La plongée', lt: 'Nardymas', pr: '[la plo~-zhay]' },
+                { fr: 'Le baseball', lt: 'Beisbolas', pr: '[luh bez-bol]' },
+                { fr: 'L\'équipe', lt: 'Komanda', pr: '[lay-keep]' },
+                { fr: 'Le joueur', lt: 'Žaidėjas', pr: '[luh zhoo-uhr]' },
+                { fr: 'L\'entraîneur', lt: 'Treneris', pr: '[lo~-treh-nuhr]' },
+                { fr: 'Le stade', lt: 'Stadionas', pr: '[luh stad]' },
+                { fr: 'Le terrain', lt: 'Aikštė', pr: '[luh teh-ra~]' },
+                { fr: 'Le ballon', lt: 'Kamuolys', pr: '[luh ba-lo~]' },
+                { fr: 'Le match', lt: 'Rungtynės', pr: '[luh match]' },
+                { fr: 'Le score', lt: 'Rezultatas', pr: '[luh skor]' },
+                { fr: 'Gagner', lt: 'Laimėti', pr: '[gan-yay]' },
+                { fr: 'Perdre', lt: 'Pralaimėti', pr: '[perdr]' },
+                { fr: 'L\'arbitre', lt: 'Teisėjas', pr: '[lar-beetr]' },
+                { fr: 'La victoire', lt: 'Pergalė', pr: '[la veek-twar]' },
+                { fr: 'La médaille', lt: 'Medalis', pr: '[la may-da-ee]' },
+                { fr: 'Le champion', lt: 'Čempionas', pr: '[luh sho~-pyo~]' }
+            ],
+            mathnumbers: [
+                { fr: 'Zéro', lt: 'Nulis', pr: '[zay-ro]' },
+                { fr: 'Un', lt: 'Vienas', pr: '[a~]' },
+                { fr: 'Deux', lt: 'Du', pr: '[duh]' },
+                { fr: 'Trois', lt: 'Trys', pr: '[trwa]' },
+                { fr: 'Quatre', lt: 'Keturi', pr: '[katr]' },
+                { fr: 'Cinq', lt: 'Penki', pr: '[sa~k]' },
+                { fr: 'Six', lt: 'Šeši', pr: '[sees]' },
+                { fr: 'Sept', lt: 'Septyni', pr: '[set]' },
+                { fr: 'Huit', lt: 'Aštuoni', pr: '[weet]' },
+                { fr: 'Neuf', lt: 'Devyni', pr: '[nuhf]' },
+                { fr: 'Dix', lt: 'Dešimt', pr: '[dees]' },
+                { fr: 'Onze', lt: 'Vienuolika', pr: '[o~z]' },
+                { fr: 'Vingt', lt: 'Dvidešimt', pr: '[va~]' },
+                { fr: 'Trente', lt: 'Trisdešimt', pr: '[tro~t]' },
+                { fr: 'Cinquante', lt: 'Penkiasdešimt', pr: '[sa~-ko~t]' },
+                { fr: 'Cent', lt: 'Šimtas', pr: '[so~]' },
+                { fr: 'Mille', lt: 'Tūkstantis', pr: '[meel]' },
+                { fr: 'Les mathématiques', lt: 'Matematika', pr: '[lay ma-tay-ma-teek]' },
+                { fr: 'Le nombre', lt: 'Skaičius', pr: '[luh no~br]' },
+                { fr: 'Le chiffre', lt: 'Skaitmuo', pr: '[luh sheefr]' },
+                { fr: 'Plus', lt: 'Plius', pr: '[plüs]' },
+                { fr: 'Moins', lt: 'Minus', pr: '[mwa~]' },
+                { fr: 'Multiplié par', lt: 'Padauginta iš', pr: '[mül-tee-plee-yay par]' },
+                { fr: 'Divisé par', lt: 'Padalinta iš', pr: '[dee-vee-zay par]' },
+                { fr: 'Égale', lt: 'Lygu', pr: '[ay-gal]' },
+                { fr: 'La somme', lt: 'Suma', pr: '[la som]' },
+                { fr: 'Le cercle', lt: 'Apskritimas', pr: '[luh serkl]' },
+                { fr: 'Le carré', lt: 'Kvadratas', pr: '[luh ka-ray]' },
+                { fr: 'Le triangle', lt: 'Trikampis', pr: '[luh tree-o~gl]' },
+                { fr: 'L\'équation', lt: 'Lygtis', pr: '[lay-kwa-syo~]' },
+                { fr: 'La calculatrice', lt: 'Skaičiuotuvas', pr: '[la kal-kü-la-trees]' }
+            ],
+            geography: [
+                { fr: 'La géographie', lt: 'Geografija', pr: '[la zhay-o-gra-fee]' },
+                { fr: 'Le monde', lt: 'Pasaulis', pr: '[luh mo~d]' },
+                { fr: 'Le pays', lt: 'Šalis', pr: '[luh pay-ee]' },
+                { fr: 'La ville', lt: 'Miestas', pr: '[la veel]' },
+                { fr: 'La capitale', lt: 'Sostinė', pr: '[la ka-pee-tal]' },
+                { fr: 'Le continent', lt: 'Žemynas', pr: '[luh ko~-tee-no~]' },
+                { fr: 'L\'océan', lt: 'Vandenynas', pr: '[lo-say-o~]' },
+                { fr: 'La mer', lt: 'Jūra', pr: '[la mair]' },
+                { fr: 'Le fleuve', lt: 'Upė', pr: '[luh fluhv]' },
+                { fr: 'La rivière', lt: 'Upė (maža)', pr: '[la ree-vyair]' },
+                { fr: 'La montagne', lt: 'Kalnas', pr: '[la mo~-tan]' },
+                { fr: 'La colline', lt: 'Kalva', pr: '[la ko-leen]' },
+                { fr: 'La vallée', lt: 'Slėnis', pr: '[la va-lay]' },
+                { fr: 'Le lac', lt: 'Ežeras', pr: '[luh lak]' },
+                { fr: 'La forêt', lt: 'Miškas', pr: '[la fo-reh]' },
+                { fr: 'Le désert', lt: 'Dykuma', pr: '[luh day-zair]' },
+                { fr: 'L\'île', lt: 'Sala', pr: '[leel]' },
+                { fr: 'La plage', lt: 'Paplūdimys', pr: '[la plazh]' },
+                { fr: 'Le nord', lt: 'Šiaurė', pr: '[luh nor]' },
+                { fr: 'Le sud', lt: 'Pietūs', pr: '[luh süd]' },
+                { fr: 'L\'est', lt: 'Rytai', pr: '[lest]' },
+                { fr: 'L\'ouest', lt: 'Vakarai', pr: '[lwest]' },
+                { fr: 'La carte', lt: 'Žemėlapis', pr: '[la kart]' },
+                { fr: 'La France', lt: 'Prancūzija', pr: '[la fro~s]' },
+                { fr: 'Paris', lt: 'Paryžius', pr: '[pa-ree]' },
+                { fr: 'L\'Europe', lt: 'Europa', pr: '[luh-rop]' },
+                { fr: 'L\'Afrique', lt: 'Afrika', pr: '[la-freek]' },
+                { fr: 'L\'Asie', lt: 'Azija', pr: '[la-zee]' },
+                { fr: 'L\'Amérique', lt: 'Amerika', pr: '[la-may-reek]' }
+            ],
+            history: [
+                { fr: 'L\'histoire', lt: 'Istorija', pr: '[lees-twar]' },
+                { fr: 'Le passé', lt: 'Praeitis', pr: '[luh pa-say]' },
+                { fr: 'Le présent', lt: 'Dabartis', pr: '[luh pray-zo~]' },
+                { fr: 'Le futur', lt: 'Ateitis', pr: '[luh fü-tür]' },
+                { fr: 'Le siècle', lt: 'Amžius', pr: '[luh syekl]' },
+                { fr: 'La guerre', lt: 'Karas', pr: '[la gair]' },
+                { fr: 'La paix', lt: 'Taika', pr: '[la peh]' },
+                { fr: 'Le roi', lt: 'Karalius', pr: '[luh rwa]' },
+                { fr: 'La reine', lt: 'Karalienė', pr: '[la ren]' },
+                { fr: 'Le prince', lt: 'Princas', pr: '[luh pra~s]' },
+                { fr: 'La princesse', lt: 'Princesė', pr: '[la pra~-ses]' },
+                { fr: 'L\'empereur', lt: 'Imperatorius', pr: '[lo~-pruh]' },
+                { fr: 'Le château', lt: 'Pilis', pr: '[luh sha-to]' },
+                { fr: 'La révolution', lt: 'Revoliucija', pr: '[la ray-vo-lü-syo~]' },
+                { fr: 'La bataille', lt: 'Mūšis', pr: '[la ba-ta-ee]' },
+                { fr: 'Le soldat', lt: 'Kareivis', pr: '[luh sol-da]' },
+                { fr: 'L\'armée', lt: 'Kariuomenė', pr: '[lar-may]' },
+                { fr: 'Le musée', lt: 'Muziejus', pr: '[luh mü-zay]' },
+                { fr: 'Le monument', lt: 'Paminklas', pr: '[luh mo-nü-mo~]' },
+                { fr: 'L\'ancien', lt: 'Senovinis', pr: '[lo~-sya~]' },
+                { fr: 'Moderne', lt: 'Modernus', pr: '[mo-dern]' },
+                { fr: 'La civilisation', lt: 'Civilizacija', pr: '[la see-vee-lee-za-syo~]' },
+                { fr: 'L\'empire', lt: 'Imperija', pr: '[lo~-peer]' },
+                { fr: 'La découverte', lt: 'Atradimas', pr: '[la day-koo-vairt]' },
+                { fr: 'L\'invention', lt: 'Išradimas', pr: '[la~-vo~-syo~]' }
+            ],
+            languages: [
+                { fr: 'La langue', lt: 'Kalba', pr: '[la lo~g]' },
+                { fr: 'Le français', lt: 'Prancūzų kalba', pr: '[luh fro~-seh]' },
+                { fr: 'L\'anglais', lt: 'Anglų kalba', pr: '[lo~-gleh]' },
+                { fr: 'L\'espagnol', lt: 'Ispanų kalba', pr: '[les-pan-yol]' },
+                { fr: 'L\'allemand', lt: 'Vokiečių kalba', pr: '[lal-mo~]' },
+                { fr: 'L\'italien', lt: 'Italų kalba', pr: '[lee-tal-ya~]' },
+                { fr: 'Le portugais', lt: 'Portugalų kalba', pr: '[luh por-tü-geh]' },
+                { fr: 'Le russe', lt: 'Rusų kalba', pr: '[luh rüs]' },
+                { fr: 'Le chinois', lt: 'Kinų kalba', pr: '[luh shee-nwa]' },
+                { fr: 'Le japonais', lt: 'Japonų kalba', pr: '[luh zha-po-neh]' },
+                { fr: 'L\'arabe', lt: 'Arabų kalba', pr: '[la-rab]' },
+                { fr: 'Le polonais', lt: 'Lenkų kalba', pr: '[luh po-lo-neh]' },
+                { fr: 'Le lituanien', lt: 'Lietuvių kalba', pr: '[luh lee-twa-nya~]' },
+                { fr: 'Le mot', lt: 'Žodis', pr: '[luh mo]' },
+                { fr: 'La phrase', lt: 'Sakinys', pr: '[la fraz]' },
+                { fr: 'La lettre', lt: 'Raidė', pr: '[la letr]' },
+                { fr: 'L\'alphabet', lt: 'Abėcėlė', pr: '[lal-fa-beh]' },
+                { fr: 'La grammaire', lt: 'Gramatika', pr: '[la gra-mair]' },
+                { fr: 'Le vocabulaire', lt: 'Žodynas', pr: '[luh vo-ka-bü-lair]' },
+                { fr: 'Parler', lt: 'Kalbėti', pr: '[par-lay]' },
+                { fr: 'Écrire', lt: 'Rašyti', pr: '[ay-kreer]' },
+                { fr: 'Lire', lt: 'Skaityti', pr: '[leer]' },
+                { fr: 'Écouter', lt: 'Klausytis', pr: '[ay-koo-tay]' },
+                { fr: 'Comprendre', lt: 'Suprasti', pr: '[ko~-pro~dr]' },
+                { fr: 'Apprendre', lt: 'Mokytis', pr: '[a-pro~dr]' },
+                { fr: 'Traduire', lt: 'Versti', pr: '[tra-dweer]' },
+                { fr: 'La traduction', lt: 'Vertimas', pr: '[la tra-dük-syo~]' },
+                { fr: 'Bilingue', lt: 'Dvikalbis', pr: '[bee-la~g]' },
+                { fr: 'Polyglotte', lt: 'Daugiakalbis', pr: '[po-lee-glot]' }
+            ],
+            travel: [
+                { fr: 'L\'aéroport', lt: 'Oro uostas', pr: '[la-ay-ro-por]' },
+                { fr: 'La gare', lt: 'Traukinių stotis', pr: '[la gar]' },
+                { fr: 'L\'hôtel', lt: 'Viešbutis', pr: '[lo-tel]' },
+                { fr: 'La rue', lt: 'Gatvė', pr: '[la rü]' },
+                { fr: 'Le musée', lt: 'Muziejus', pr: '[luh mü-zay]' },
+                { fr: 'Le restaurant', lt: 'Restoranas', pr: '[luh res-to-ro~]' },
+                { fr: 'Le billet', lt: 'Bilietas', pr: '[luh bee-yeh]' },
+                { fr: 'Où est...?', lt: 'Kur yra...?', pr: '[oo eh]' },
+                { fr: 'Combien ça coûte?', lt: 'Kiek kainuoja?', pr: '[ko~-bya~ sa koot]' },
+                { fr: 'À gauche', lt: 'Kairėje', pr: '[a gosh]' },
+                { fr: 'À droite', lt: 'Dešinėje', pr: '[a drwat]' },
+                { fr: 'Tout droit', lt: 'Tiesiai', pr: '[too drwa]' }
+            ]
+        };
+
+        let cat = 'basics';
+        let idx = 0;
+
+        function update() {
+            const w = VOCAB[cat][idx];
+            document.getElementById('french-word').textContent = w.fr;
+            document.getElementById('pronunciation').textContent = w.pr;
+            document.getElementById('lithuanian-word').textContent = w.lt;
+            document.getElementById('progress').textContent = `Kortelė ${idx + 1} iš ${VOCAB[cat].length}`;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            idx = (idx + 1) % VOCAB[cat].length;
+            update();
+        }
+
+        function previousCard() {
+            idx = (idx - 1 + VOCAB[cat].length) % VOCAB[cat].length;
+            update();
+        }
+
+        function changeCategory(c) {
+            cat = c;
+            idx = 0;
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            update();
+        }
+
+        function openGoogleTranslate() {
+            const w = VOCAB[cat][idx];
+            const url = `https://translate.google.com/?sl=fr&tl=lt&text=${encodeURIComponent(w.fr)}&op=translate`;
+            window.open(url, '_blank');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextCard();
+            if (e.key === 'ArrowLeft') previousCard();
+            if (e.key === ' ') { e.preventDefault(); flipCard(); }
+        });
+
+        update();
+    </script>
+</body>
+</html>
